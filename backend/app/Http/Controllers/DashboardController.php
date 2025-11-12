@@ -25,7 +25,7 @@ class DashboardController extends Controller
                 $enrolledCourseIds = Enrollment::where('user_id', $user->id)->pluck('course_id');
                 $courses = Course::whereIn('id', $enrolledCourseIds)
                     ->with('teacher:id,username,email')
-                    ->get(['id','name','course_code','teacher_id','teacher_email','created_at','image_url']);
+                    ->get(['id','name','course_code','teacher_id','teacher_email','created_at','image_url','is_public']);
                 $courseIds = $courses->pluck('id')->all();
                 // batch counts
                 $studentCounts = Enrollment::whereIn('course_id', $courseIds)
@@ -95,7 +95,7 @@ class DashboardController extends Controller
             // Teacher dashboard
             $courses = Course::where('teacher_id', $user->id)
                 ->with('teacher:id,username,email')
-                ->get(['id','name','course_code','teacher_id','teacher_email','created_at','image_url']);
+                ->get(['id','name','course_code','teacher_id','teacher_email','created_at','image_url','is_public']);
             $courseIds = $courses->pluck('id')->all();
             $studentCounts = Enrollment::whereIn('course_id', $courseIds)
                 ->select('course_id', DB::raw('count(*) as cnt'))

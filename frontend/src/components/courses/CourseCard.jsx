@@ -2,11 +2,11 @@ import React from 'react';
 import { toImageUrl } from '../../api';
 import { theme } from '../../theme';
 
-function CourseCard({ course, onClick }) {
+function CourseCard({ course, onClick, onEnroll, enrolled = false, enrolling = false, showEnroll = false }) {
   const srcRaw = course?.image_url || course?.course_image_url || null;
   const imgUrl = srcRaw ? toImageUrl(srcRaw) : null;
   const resolvedSrc = imgUrl || null;
-  const isPublic = !!course?.is_public;
+  const isPublic = (course?.is_public ?? true);
   const students = course?.students_count ?? course?.enrolled_count ?? 0;
   const quizzes = course?.quizzes_count ?? 0;
   return (
@@ -20,6 +20,7 @@ function CourseCard({ course, onClick }) {
         background: '#fff',
         boxShadow: '0 8px 18px rgba(0,0,0,0.06)',
         transition: 'transform .2s ease, box-shadow .2s ease, border-color .2s ease',
+        position: 'relative',
       }}
       onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 16px 28px rgba(106,62,203,0.18)'; e.currentTarget.style.transform = 'translateY(-2px) scale(1.03)'; e.currentTarget.style.borderColor = '#e6dbff'; }}
       onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 8px 18px rgba(0,0,0,0.06)'; e.currentTarget.style.transform = 'none'; e.currentTarget.style.borderColor = 'rgba(0,0,0,0.06)'; }}
@@ -47,6 +48,19 @@ function CourseCard({ course, onClick }) {
           </div>
         )}
       </div>
+      {showEnroll && typeof onEnroll === 'function' && (
+        <div style={{ position: 'absolute', right: 12, bottom: 12 }}>
+          <button
+            disabled={enrolling || enrolled}
+            onClick={(e)=>{ e.stopPropagation(); onEnroll(course); }}
+            style={{ padding: '8px 12px', borderRadius: 10, border: 'none', background: theme.palette.primary.main, color: '#fff', fontWeight: 800, boxShadow: '0 6px 14px rgba(255,20,147,0.25)', transition: 'transform .12s ease' }}
+            onMouseEnter={e => (e.currentTarget.style.transform = 'translateY(-2px)')}
+            onMouseLeave={e => (e.currentTarget.style.transform = 'none')}
+          >
+            {enrolled ? 'Enrolled' : (enrolling ? 'Enrolling…' : 'Enroll')}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

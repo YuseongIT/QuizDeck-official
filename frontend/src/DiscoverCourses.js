@@ -71,20 +71,18 @@ export default function DiscoverCourses() {
   }, [courses]);
   const courseCards = useMemo(() => (
     filtered.map(c => (
-      <div key={c.id} style={{ position: 'relative' }}>
-        <CourseCard course={c} onClick={() => navigate(`/course/${c.id}`)} />
-        <div style={{ position: 'absolute', right: 12, bottom: 12 }}>
-          <button
-            disabled={enrolling === c.id || c._enrolled}
-            onClick={(e) => { e.stopPropagation(); enroll(c); }}
-            style={{ padding: '8px 12px', borderRadius: 10, border: 'none', background: theme.palette.primary.main, color: '#fff', fontWeight: 800, boxShadow: '0 6px 14px rgba(255,20,147,0.25)', transition: 'transform .12s ease' }}
-            onMouseEnter={e => (e.currentTarget.style.transform = 'translateY(-2px)')}
-            onMouseLeave={e => (e.currentTarget.style.transform = 'none')}
-          >
-            {c._enrolled ? 'Enrolled' : (enrolling === c.id ? 'Enrolling…' : 'Enroll')}
-          </button>
-        </div>
-      </div>
+      <CourseCard
+        key={c.id}
+        course={c}
+        onClick={() => navigate(`/course/${c.id}`)}
+        showEnroll={true}
+        enrolled={!!c._enrolled}
+        enrolling={enrolling === c.id}
+        onEnroll={async (course) => {
+          await enroll(course);
+          try { window.dispatchEvent(new CustomEvent('courses:update')); window.dispatchEvent(new CustomEvent('dashboard:update')); } catch(_) {}
+        }}
+      />
     ))
   ), [filtered, enrolling, navigate]);
   const containerStyle = { display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: '#d5ceed' };

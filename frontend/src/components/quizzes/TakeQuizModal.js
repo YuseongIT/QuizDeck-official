@@ -164,12 +164,24 @@ export default function TakeQuizModal({ token, quizId, onClose }) {
     if (!attempt) return;
     try {
       stopAutosave();
-      // Normalize ordering answers to match saved meta.order tokens exactly
+      // Normalize answers to match backend expectations
       const payloadAnswers = (() => {
         const out = { ...answers };
         try {
           (quiz.items || []).forEach(it => {
-            const type = String(it.type || '').toLowerCase();
+            const type = String(it.type||'').toLowerCase();
+            // true_false questions: backend expects choice IDs, but UI stores 'True'/'False'. Map to the matching choice id.
+            if (type === 'true_false') {
+              const val = out[it.id];
+              const choices = Array.isArray(it.choices) ? it.choices : [];
+              if (typeof val === 'string') {
+                const target = val.trim().toLowerCase();
+                const match = choices.find(c => String((c.choice_text ?? c.label ?? '')).trim().toLowerCase() === target);
+                if (match && match.id != null) {
+                  out[it.id] = match.id;
+                }
+              }
+            }
             if (type === 'ordering' && Array.isArray(out[it.id]) && Array.isArray(it?.meta?.order)) {
               const originals = (it.meta.order || []).map(s => (s ?? '').toString());
               const normMap = new Map();
@@ -539,7 +551,20 @@ export default function TakeQuizModal({ token, quizId, onClose }) {
                 const correct = isTrue(rec.is_correct);
                 const t = String(it.type||'').toLowerCase();
                 if (t==='identification') return { text: String(sel||'') || '—', correct };
-                if (t==='true_false') return { text: String(sel||'') || '—', correct };
+                if (t==='true_false') {
+                  const choices = Array.isArray(it.choices) ? it.choices : [];
+                  let label = '';
+                  if (typeof sel === 'string' || typeof sel === 'number') {
+                    const byId = choices.find(c => String(c.id) === String(sel));
+                    if (byId) label = String(byId.choice_text || byId.label || '');
+                  }
+                  if (!label && typeof sel === 'string') {
+                    // fallback if backend stored 'True'/'False'
+                    const byText = choices.find(c => String((c.choice_text ?? c.label ?? '')).trim().toLowerCase() === sel.trim().toLowerCase());
+                    if (byText) label = String(byText.choice_text || byText.label || '');
+                  }
+                  return { text: label || String(sel||'') || '—', correct };
+                }
                 if (t==='multiple_choice') {
                   const choice = (it.choices||[]).find(c => String(c.id)===String(sel));
                   return { text: choice ? (choice.choice_text||`#${choice.id}`) : (String(sel||'')||'—'), correct };
