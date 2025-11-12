@@ -207,8 +207,11 @@ export default function QuizDetailsModal({ token, user, quiz: initialQuiz, open,
 
   function bust(url) {
     if (!url) return url;
-    const sep = url.includes('?') ? '&' : '?';
-    return `${url}${sep}t=${Date.now()}`;
+    const u = String(url);
+    // Avoid cache-busting for local object/data/file URLs which breaks previews
+    if (u.startsWith('blob:') || u.startsWith('data:') || u.startsWith('file:')) return u;
+    const sep = u.includes('?') ? '&' : '?';
+    return `${u}${sep}t=${Date.now()}`;
   }
 
   async function saveChanges() {
