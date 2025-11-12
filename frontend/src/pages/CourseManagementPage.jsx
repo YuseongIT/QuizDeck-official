@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { API_BASE } from '../api';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
@@ -337,7 +337,7 @@ export default function CourseManagementPage() {
   }
   async function deleteCourse() {
     try {
-      const base = (process.env.REACT_APP_API_BASE || 'http://127.0.0.1:8000');
+      const base = API_BASE;
       const res = await fetch(`${base}/api/courses/${courseId}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
       let json = null; try { json = await res.json(); } catch(_) {}
       if (!res.ok) throw new Error((json && json.message) || 'Failed to delete course');
