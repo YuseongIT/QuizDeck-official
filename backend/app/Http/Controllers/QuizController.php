@@ -100,28 +100,42 @@ class QuizController extends Controller
         $ext = strtolower($file->getClientOriginalExtension() ?: 'jpg');
         $dir = "preview_images/{$quiz->id}";
         $name = "image.$ext";
-        // Try via UploadedFile API
+        // Prefer configured default disk, with automatic fallback to 'public'
+        $disk = config('filesystems.default', 'public');
+        $url = null; $storedKey = null; $usedDisk = $disk;
+        // Attempt 1: default disk
         try {
-            $path = $file->storePubliclyAs($dir, $name, ['disk' => 's3']);
-            $url = Storage::disk('s3')->url($path);
+            $path = $file->storePubliclyAs($dir, $name, ['disk' => $disk]);
+            $storedKey = $path;
+            $url = Storage::disk($disk)->url($path);
         } catch (\Throwable $e) {
-            // Fallback to Storage::put with stream
+            // Attempt 2: raw put on default disk
             try {
                 $key = rtrim($dir, '/') . '/' . $name;
-                Storage::disk('s3')->put($key, fopen($file->getRealPath(), 'r'));
-                $url = Storage::disk('s3')->url($key);
+                Storage::disk($disk)->put($key, fopen($file->getRealPath(), 'r'));
+                $storedKey = $key;
+                $url = Storage::disk($disk)->url($key);
             } catch (\Throwable $e2) {
-                return response()->json([
-                    'message' => 'Failed to upload preview image',
-                    'hint' => 'Verify AWS credentials, bucket, region, and IAM s3:PutObject permissions. If S3 Block Public Access is enabled, ensure bucket policy allows public reads or remove public visibility.',
-                    'error' => $e2->getMessage(),
-                ], 500);
+                // Attempt 3: fallback to 'public' disk
+                try {
+                    $fallback = 'public';
+                    $path = $file->storePubliclyAs($dir, $name, ['disk' => $fallback]);
+                    $storedKey = $path; $usedDisk = $fallback;
+                    $url = Storage::disk($fallback)->url($path);
+                } catch (\Throwable $e3) {
+                    // Final failure: report diagnostic
+                    return response()->json([
+                        'message' => 'Failed to upload preview image',
+                        'hint' => 'If using S3, verify AWS credentials, bucket, region, and s3:PutObject permissions. Otherwise ensure storage:link exists and storage is writable.',
+                        'error' => $e3->getMessage(),
+                    ], 500);
+                }
             }
         }
         // Deterministic cache-busting based on object last modified time
         try {
-            $key = StorageHelper::urlToS3Key($url) ?: (rtrim($dir, '/') . '/' . $name);
-            $ver = Storage::disk('s3')->lastModified($key);
+            $key = $storedKey ?: (rtrim($dir, '/') . '/' . $name);
+            $ver = Storage::disk($usedDisk)->lastModified($key);
             if ($ver) {
                 $sep = str_contains($url, '?') ? '&' : '?';
                 $url = $url . $sep . 'v=' . $ver;
