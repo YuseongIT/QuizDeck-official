@@ -42,7 +42,7 @@ export default function CourseCreateForm({ token, onClose, onCreated }) {
       }
       // eslint-disable-next-line no-console
       console.log('[DEBUG] POST /api/courses', { name, isPublic, hasImage: image instanceof File });
-      const res = await axios.post(`${base}/api/courses`, formData, { headers: { Authorization: `Bearer ${token}` } });
+      const res = await axios.post(`${base}/api/courses`, formData, { headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' } });
       // eslint-disable-next-line no-console
       console.log('[DEBUG] create course status:', res.status, 'payload:', res.data);
       const created = (res?.data && res.data.course) ? res.data.course : res?.data;
@@ -50,7 +50,10 @@ export default function CourseCreateForm({ token, onClose, onCreated }) {
       onCreated?.(created);
       onClose?.();
     } catch (e) {
-      setError(e.message || 'Failed to create course');
+      const msg = (e?.response?.data?.message) || (e?.response?.data?.error) || e?.message || 'Failed to create course';
+      // eslint-disable-next-line no-console
+      console.error('[CreateCourse modal] error:', e?.response?.status, e?.response?.data || e);
+      setError(msg);
     } finally {
       setSubmitting(false);
     }

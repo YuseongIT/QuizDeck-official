@@ -51,7 +51,7 @@ const LandingPage = () => {
       key: 'vscode',
       title: 'Visual Studio Code',
       description: 'The primary IDE used to build QuizDeck, enhanced with helpful extensions for faster, friendlier development.',
-      img: 'https://code.visualstudio.com/assets/images/code-stable.png'
+      img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/Visual_Studio_Code_1.35_icon.svg/1200px-Visual_Studio_Code_1.35_icon.svg.png'
     },
     {
       key: 'laravel',

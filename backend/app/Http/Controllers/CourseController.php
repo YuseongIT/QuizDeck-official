@@ -124,17 +124,19 @@ class CourseController extends Controller
         ]);
 
         $course = new Course();
-        // name / course_name
+        // name / course_name (populate both if both columns exist)
         if (Schema::hasColumn('courses','name')) {
             $course->name = $request->name;
-        } elseif (Schema::hasColumn('courses','course_name')) {
+        }
+        if (Schema::hasColumn('courses','course_name')) {
             $course->course_name = $request->name;
         }
-        // description / course_description
+        // description / course_description (populate both if both columns exist)
         $descVal = $request->description ?? '';
         if (Schema::hasColumn('courses','description')) {
             $course->description = $descVal;
-        } elseif (Schema::hasColumn('courses','course_description')) {
+        }
+        if (Schema::hasColumn('courses','course_description')) {
             $course->course_description = $descVal;
         }
         // Normalize boolean (use this local flag for logic regardless of schema)
@@ -175,10 +177,10 @@ class CourseController extends Controller
                 $course->image_url = $url;
                 $course->save();
                 $uploadedS3Key = StorageHelper::urlToS3Key($url);
-                Log::info('COURSE_IMAGE_UPLOAD_S3_OK', ['url' => $url]);
+                try { Log::info('COURSE_IMAGE_UPLOAD_S3_OK', ['url' => $url]); } catch (\Throwable $__) {}
                 try { Cache::forget('course:image:url:' . (int)$course->id); } catch (\Throwable $__) {}
             } catch (\Throwable $e) {
-                Log::error('COURSE_IMAGE_UPLOAD_S3_FAILED', ['error' => $e->getMessage()]);
+                try { Log::error('COURSE_IMAGE_UPLOAD_S3_FAILED', ['error' => $e->getMessage()]); } catch (\Throwable $__) {}
                 // Non-fatal: keep course without image (placeholder will render)
             }
         }
@@ -250,13 +252,13 @@ class CourseController extends Controller
         if ($request->hasFile('image')) {
             try {
                 $url = StorageHelper::overwriteFixedCourseImage($request->file('image'), $course->id);
-                Log::debug('COURSE_UPDATE_IMAGE_OK');
+                try { Log::debug('COURSE_UPDATE_IMAGE_OK'); } catch (\Throwable $__) {}
                 $course->image_url = $url;
                 $uploadedS3Key = StorageHelper::urlToS3Key($url);
                 try { Cache::forget('course:image:url:' . (int)$course->id); } catch (\Throwable $__) {}
             } catch (\Throwable $e) {
-                Log::error('COURSE_UPDATE_IMAGE_FAILED', ['error'=>$e->getMessage()]);
-                return response()->json(['error' => 'Failed to upload course image. Please try again.'], 500);
+                // Non-fatal: log and continue without changing the image
+                try { Log::error('COURSE_UPDATE_IMAGE_FAILED', ['error'=>$e->getMessage()]); } catch (\Throwable $__) {}
             }
         }
 
