@@ -139,12 +139,15 @@ const LandingPage = () => {
               </div>
 
               <div className="info-card">
-                <h3>✨ Why you’ll love QuizDeck:</h3>
+                <h3>✨ What QuizDeck can do for you:</h3>
                 <ul>
-                  <li><strong>Easy quiz creation:</strong> Build quizzes in just a few clicks—no complicated setup needed.</li>
-                  <li><strong>Collaborate and share:</strong> Work with classmates, friends, or colleagues and see how everyone stacks up.</li>
-                  <li><strong>Clean and intuitive design:</strong> Focus on learning without getting lost in cluttered menus or confusing interfaces.</li>
+                  <li><strong>Create:</strong> Educate yourself and others with fun an innovative way.</li>
+                  <li><strong>Achieve:</strong> Raise your intellect to a whole new level!</li>
+                  <li><strong>Share:</strong> Inspire others to do their very best!</li>
                 </ul>
+                <p>
+               Where learning becomes entertaining and all tests become interesting! 
+              </p>
               </div>
 
               <div className="info-card">
@@ -258,6 +261,10 @@ const LandingPage = () => {
                 <div className="info-card">
                   <h3>🌟 Our Vision</h3>
                   <p>To be the leading study platform that revolutionizes how students learn, making active recall and self-testing a fundamental and enjoyable part of every learner's academic journey, leading to deeper understanding and long-term retention.</p>
+                </div>
+                 <div className="info-card">
+                  <h3>🎯 Special Tanks</h3>
+                  <p>A special thanks for Rochelle Ann Salucop for letting us support and continue her idea!</p>
                 </div>
               </div>
 
